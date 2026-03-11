@@ -1,2 +1,115 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Cloud Deployment Model Advisor
+
+def ask_yes_no(question):
+    while True:
+        answer = input(question + " (yes/no): ").strip().lower()
+        if answer in ["yes", "no"]:
+            return answer
+        print("Invalid input. Please type 'yes' or 'no'.")
+
+def ask_workload(question):
+    while True:
+        answer = input(question + " (stable/variable): ").strip().lower()
+        if answer in ["stable", "variable"]:
+            return answer
+        print("Invalid input. Please type 'stable' or 'variable'.")
+
+
+def recommend_model(answers):
+    scores = {
+        "Public Cloud": 0,
+        "Private Cloud": 0,
+        "Hybrid Cloud": 0,
+        "Community Cloud": 0
+    }
+
+    # Regulation
+    if answers["regulated"] == "yes":
+        scores["Private Cloud"] += 2
+        scores["Hybrid Cloud"] += 1
+    else:
+        scores["Public Cloud"] += 2
+
+    # Workload type
+    if answers["workload"] == "variable":
+        scores["Public Cloud"] += 2
+        scores["Hybrid Cloud"] += 1
+    else:
+        scores["Private Cloud"] += 1
+
+    # IT team
+    if answers["it_team"] == "yes":
+        scores["Private Cloud"] += 2
+        scores["Hybrid Cloud"] += 1
+    else:
+        scores["Public Cloud"] += 2
+
+    # Data residency
+    if answers["data_residency"] == "yes":
+        scores["Private Cloud"] += 1
+        scores["Hybrid Cloud"] += 2
+    else:
+        scores["Public Cloud"] += 1
+
+    # Consortium membership
+    if answers["consortium"] == "yes":
+        scores["Community Cloud"] += 3
+
+    # Determine recommendation
+    recommendation = max(scores, key=scores.get)
+
+    # Build justification
+    reason = []
+
+    if answers["regulated"] == "yes":
+        reason.append("your organisation operates in a regulated industry")
+    if answers["workload"] == "variable":
+        reason.append("your workload demand is highly variable")
+    else:
+        reason.append("your workload demand is stable")
+    if answers["it_team"] == "yes":
+        reason.append("you have an internal IT team")
+    if answers["data_residency"] == "yes":
+        reason.append("data must stay within a specific region")
+    if answers["consortium"] == "yes":
+        reason.append("you are part of an industry consortium")
+
+    justification = ", ".join(reason)
+
+    return recommendation, justification
+
+
+def main():
+    print("=== Cloud Deployment Model Advisor ===\n")
+
+    answers = {}
+
+    answers["regulated"] = ask_yes_no(
+        "Is your organisation in a heavily regulated industry?"
+    )
+
+    answers["workload"] = ask_workload(
+        "Is your workload demand stable or variable?"
+    )
+
+    answers["it_team"] = ask_yes_no(
+        "Does the organisation have a dedicated IT operations team?"
+    )
+
+    answers["data_residency"] = ask_yes_no(
+        "Must data remain within a specific country or region?"
+    )
+
+    answers["consortium"] = ask_yes_no(
+        "Is the organisation part of an industry consortium with shared requirements?"
+    )
+
+    model, reason = recommend_model(answers)
+
+    print("\nRecommendation:", model)
+    print("Reason: Based on your answers,", reason +
+          ", this deployment model best balances control, scalability, and compliance.")
+
+
+if __name__ == "__main__":
+    main()
